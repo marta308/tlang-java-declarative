@@ -1,0 +1,11 @@
+
+public class CompositionException extends RuntimeException {
+
+	private static final long serialVersionUID = 165980739633333340L;
+	
+	
+	public CompositionException(String message){
+		super(message);
+	}
+	
+}

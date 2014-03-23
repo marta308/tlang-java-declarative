@@ -1,0 +1,8 @@
+class subject{
+	[[innerclasshook1]]
+	[[innerclasshook2]]
+	[[innerclasshook3]]
+	[[innerclasshook4]]
+	[[varhook1]]
+}
+

@@ -1,0 +1,24 @@
+class abc{
+	a;
+	b;
+	c;
+	
+	setA(aa;){
+		[[hook]]	
+	}
+	setB(bb;){
+		[[hook]]	
+	}
+	setC(cc;){
+		[[hook]]	
+	}
+	getA(){
+		[[hook]]	
+	}
+	getB(){
+		[[hook]]	
+	}
+	getC(){
+		[[hook]]	
+	}
+}

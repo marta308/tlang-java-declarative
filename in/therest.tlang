@@ -1,0 +1,11 @@
+class theRest{
+	localVar;
+	varForBindExhaust;
+
+	class mixclass{
+		[[classhook1]]
+		[[classhook2]]
+		[[classhook3]]
+		[[classhook4]]	
+	}
+}

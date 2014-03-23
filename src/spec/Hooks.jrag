@@ -1,0 +1,52 @@
+
+aspect Hooks{
+
+	syn java.util.List<DeclarationHook> CompilationUnit.collHooks(){
+  		java.util.List<DeclarationHook> res = new java.util.LinkedList<DeclarationHook>();	
+    	for (Declaration d : getClassDeclarationList()){
+      		res.addAll(d.localCollHooks());
+      	}
+      	return res;
+    }
+    
+	syn java.util.List<DeclarationHook> Declaration.localCollHooks() = new java.util.LinkedList<DeclarationHook>();
+    
+	eq ClassDeclaration.localCollHooks() {
+		java.util.List<DeclarationHook> res = new java.util.LinkedList<DeclarationHook>();
+  		for(Declaration d : getClassBodyList()){
+  	  		if(d instanceof DeclarationHook)
+  	  			res.add((DeclarationHook)d);
+  	  		else
+  	    		res.addAll(d.localCollHooks());
+  	  	}
+  		return res;
+  	}
+  
+  	eq MethodDeclaration.localCollHooks(){
+  		java.util.List<DeclarationHook> res = new java.util.LinkedList<DeclarationHook>();
+  		for(Declaration d : getParametersList()){
+  			if(d instanceof DeclarationHook)
+  	  			res.add((DeclarationHook)d);
+  		}
+  		for(Declaration d : getMethodBodyList()){
+  			if(d instanceof DeclarationHook)
+  	  			res.add((DeclarationHook)d);
+  		}	
+  		return res;
+  	}
+  	
+  	syn java.util.List<DeclarationHook> Root.collHooks(){
+  	  	java.util.List<DeclarationHook> hooks = new java.util.LinkedList<DeclarationHook>();
+  		for(CompilationUnit cu : getCompilationUnitsList())
+  			hooks.addAll(cu.collHooks());
+  		return hooks;
+  	}
+  	
+  	syn DeclarationHook Root.findHook(String hookName){
+  		for(DeclarationHook d: collHooks())
+  			if(d.qname().equals(hookName))
+  				return d;
+  		return null;
+  	}
+  			
+}

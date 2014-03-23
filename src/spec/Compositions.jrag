@@ -1,0 +1,129 @@
+
+aspect Compositions{
+		
+	inh Root CompositionProgram.getRoot();
+	eq Root.getCompositionProgram().getRoot() = this;
+	inh Root Composer.getRoot();
+	eq CompositionProgram.getComposers(int i).getRoot() = getRoot();
+	
+	inh CompositionProgram CompilationUnit.getCompositionProgram();
+	eq Root.getCompilationUnits(int i).getCompositionProgram() = getCompositionProgram();
+	inh CompositionProgram ClassDeclaration.getCompositionProgram();
+	eq CompilationUnit.getClassDeclaration(int i).getCompositionProgram() = getCompositionProgram();
+	inh CompositionProgram Declaration.getCompositionProgram();
+	eq ClassDeclaration.getClassBody(int i).getCompositionProgram() = getCompositionProgram();
+	eq MethodDeclaration.getMethodBody(int i).getCompositionProgram() = getCompositionProgram();
+	eq MethodDeclaration.getParameters(int i).getCompositionProgram() = getCompositionProgram();
+	
+
+	syn java.util.List<Declaration> Composer.getSource(){
+		if(getSourceName().equals(""))
+			return new java.util.LinkedList<Declaration>();
+		return getRoot().lookup(getSourceName());
+	}
+	
+	syn java.util.List<Declaration> Composer.getTarget(){
+		if(getTargetName().equals(""))
+			return new java.util.LinkedList<Declaration>();
+		return getRoot().lookup(getTargetName());
+	}
+	
+	syn boolean Composer.isExhausted(){
+		return getTarget().isEmpty();
+	}
+	
+	syn Composer CompositionProgram.nextComposition(){
+		Composer next = null;
+		for (int i = 0; i < getNumComposers(); i++){
+			next = getComposers(i);
+			if(!next.isExhausted())
+				return next;
+		}
+		//return null;
+		return new BindCopy("", "");	//"null" composer
+	}
+	
+	syn boolean CompositionProgram.allExhausted(){
+		for(int i=0; i<getNumComposers(); i++){
+			if(!getComposers(i).isExhausted())
+				return false;
+		}
+		return true;
+	}
+	
+	
+	syn boolean Declaration.hasAssociatedComposer(){
+		for(int i=0; i<getCompositionProgram().getNumComposers(); i++){
+			if(getCompositionProgram().getComposers(i).getTarget().contains(this))
+				return true;
+		}
+		return false;		
+	}
+	
+	syn Composer Declaration.LookUpComposer(Declaration target){
+		Composer composer = null;
+		for(int i=0; i<getCompositionProgram().getNumComposers(); i++){
+			composer = getCompositionProgram().getComposers(i);
+			if(composer.getTarget().contains(target))
+				return composer;
+		}
+		return null;	
+	}
+	
+	syn boolean Declaration.isExComposerSource(){
+		Composer composer = null;
+		for(int i=0; i<getCompositionProgram().getNumComposers(); i++){
+			composer = getCompositionProgram().getComposers(i);
+			if(composer instanceof BindExhaust && composer.getSource().contains(this) && 
+					composer.isExhausted())
+				return true;
+		}
+		return false;
+	}
+	
+	syn boolean List.isParentOfExComposerSource(){
+		for(int i=0; i<getNumChildNoTransform(); i++){
+			if(getChildNoTransform(i) instanceof Declaration &&
+					((Declaration)getChildNoTransform(i)).isExComposerSource())
+				return true;
+		}
+		return false;	
+	}
+	
+	syn int List.indexOfChildToRemove(){
+		for(int i=0; i<getNumChildNoTransform(); i++){
+			if(((Declaration)getChildNoTransform(i)).isExComposerSource())
+				return i;
+		}
+		return -1;
+	}
+	
+	public static int ASTNode.rewritesCount = 0;
+	
+	rewrite DeclarationHook {
+		when(//getCompositionProgram().nextComposition() != null &&
+				getCompositionProgram().nextComposition().getTarget().contains(this))
+		to Declaration{
+			rewritesCount++;
+			Composer composer = LookUpComposer(this);
+			java.util.List<Declaration> sources = composer.getSource();
+			if(sources.size() != 1)
+				throw new CompositionException("Incorrect composition source fragment."); 
+			Declaration source = sources.get(0);
+			return (Declaration)source.fullCopy();
+		}
+	}
+	
+	rewrite List{
+		when(isParentOfExComposerSource())
+		to List{
+			rewritesCount++;
+			int childIndex = indexOfChildToRemove();
+			if(childIndex == -1)
+				throw new CompositionException("Incorrect composition source fragment."); 
+			removeChild(childIndex);
+			return this;
+		}
+	}
+ 
+}

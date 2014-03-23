@@ -1,0 +1,13 @@
+bind_copy  subject.innerclasshook1  abc;
+bind_exhaust  subject.varhook1  theRest.varForBindExhaust;
+bind_copy  subject.*.*.hook  theRest.localVar;
+bind_copy  subject.innerclasshook2  def;
+bind_copy  subject.innerclasshook3  ghi;
+bind_copy  subject.innerclasshook4  theRest.mixclass;
+bind_copy  subject.mixclass.classhook1 abc;
+bind_copy  subject.mixclass.*.*.hook  theRest.localVar;
+bind_copy  subject.mixclass.classhook2  def;
+bind_copy  subject.mixclass.classhook3  ghi;
+bind_copy  subject.mixclass.classhook4  theRest.mixclass;
+bind_copy  subject.mixclass.mixclass.classhook1 abc;
+bind_copy  subject.mixclass.mixclass.*.*.hook  theRest.localVar;

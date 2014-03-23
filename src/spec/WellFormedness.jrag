@@ -1,0 +1,66 @@
+
+aspect WellFormedness {
+	
+	inh CompilationUnit ClassDeclaration.getCompilationUnit();
+	eq CompilationUnit.getClassDeclaration(int i).getCompilationUnit() = this;
+	inh CompilationUnit Declaration.getCompilationUnit();
+	eq ClassDeclaration.getClassBody(int i).getCompilationUnit() = getCompilationUnit();
+	eq MethodDeclaration.getMethodBody(int i).getCompilationUnit() = getCompilationUnit();
+	eq MethodDeclaration.getParameters(int i).getCompilationUnit() = getCompilationUnit();
+
+	syn boolean Root.isCorrect(){
+		for(CompilationUnit cu : getCompilationUnitsList()){
+			if(!cu.isCorrect())
+				return false;
+		}
+		return true;
+	}
+	
+	syn boolean CompilationUnit.isCorrect(){
+		for (Declaration d : getClassDeclarationList()){
+			if(!d.isCorrect())
+				return false;
+		}
+		return true;
+	}
+	
+	syn boolean Declaration.isCorrect();
+	
+	eq ClassDeclaration.isCorrect(){
+		if (!this.isCorrectLocal())
+			return false;
+		for(Declaration d : getClassBodyList()){
+			if(!d.isCorrect())
+				return false;
+		}
+		return true;
+	}
+	
+	eq MethodDeclaration.isCorrect(){
+		if (!this.isCorrectLocal())
+			return false;
+		for(Declaration d : getParametersList()){
+			if(!d.isCorrect())
+				return false;
+		}
+		for(Declaration d : getMethodBodyList()){
+			if(!d.isCorrect())
+				return false;
+		}
+		return true;
+	}
+	
+	eq FieldOrHookDeclaration.isCorrect(){
+		return this.isCorrectLocal();
+	}
+	
+	
+	syn boolean Declaration.isCorrectLocal(){
+		return (this == getParent().getParent().lookupNOWC(qname()));
+	}
+	
+	public void Root.checkWellformedness() throws CompositionException{
+		if(!isCorrect())
+			throw new CompositionException("System wellformedness violated.");
+	}
+}

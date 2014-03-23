@@ -1,0 +1,30 @@
+%header {:
+ // this code is inlined before the generated parser
+ package AST;
+:};
+
+%embed {:
+ // this code is inlined in the generated parser class
+:};
+
+%goal goal;
+
+// Productions with semantic actions building the JastAdd AST
+
+compilationunit goal =
+  declaration_list {: return new CompilationUnit(declaration_list); :}
+  ;
+   
+List declaration_list =
+    declaration                  {: return new List().add(declaration); :}
+  | declaration_list declaration {: return declaration_list.add(declaration); :}
+  | 							{: return new List(); :}
+  ;
+
+
+Declaration declaration =
+    CLASS IDENTIFIER LBRACE declaration_list RBRACE      {: return new ClassDeclaration(IDENTIFIER, declaration_list); :}
+  | IDENTIFIER LPAREN declaration_list.params RPAREN LBRACE declaration_list.locals RBRACE  {: return new MethodDeclaration(IDENTIFIER, params, locals); :}
+  | IDENTIFIER SEMI      {: return new FieldDeclaration(IDENTIFIER); :}
+  | LSQUARE LSQUARE IDENTIFIER RSQUARE RSQUARE	{: return new DeclarationHook(IDENTIFIER); :}
+  ;

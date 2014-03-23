@@ -1,0 +1,11 @@
+// Abstract syntax
+// Reference manual: http://jastadd.org/
+
+
+CompilationUnit ::= ClassDeclaration*;
+abstract Declaration ::= <Name:String>;
+abstract FieldOrHookDeclaration: Declaration;
+ClassDeclaration : Declaration ::= ClassBody:Declaration*;
+MethodDeclaration : Declaration ::= Parameters:FieldOrHookDeclaration* MethodBody:FieldOrHookDeclaration*;
+FieldDeclaration : FieldOrHookDeclaration;
+DeclarationHook : FieldOrHookDeclaration;

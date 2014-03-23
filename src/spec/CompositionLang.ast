@@ -1,0 +1,18 @@
+
+Root ::= 
+	CompilationUnits:CompilationUnit*
+	CompositionProgram:CompositionProgram
+;	
+
+CompositionProgram ::= Composers:Composer*;
+
+
+abstract Composer ::=
+	<TargetName:String>
+	<SourceName:String>
+;
+
+BindCopy:Composer ::=;
+BindExhaust:Composer ::=;
+
+

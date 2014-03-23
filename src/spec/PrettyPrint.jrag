@@ -1,0 +1,55 @@
+
+// Used in exampleprogs/Compiler.java
+// Illustrates an imperative aspect (ordinary methods).
+
+aspect PrettyPrint {
+  public void CompilationUnit.pp(java.io.Writer writer) throws java.io.IOException{
+  	writer.write("CompilationUnit\n");
+    for (Declaration d:getClassDeclarationList()) {
+      d.pp(writer, 1);
+    }
+    writer.close();
+  }
+  
+  public void Declaration.pp(java.io.Writer writer, int indent) throws java.io.IOException{}
+  
+  public void ClassDeclaration.pp(java.io.Writer writer, int indent) throws java.io.IOException{
+  	for(int i = 0; i < indent; i++)
+  		writer.write("- ");
+    writer.write("ClassDeclaration: " + getName() + "\n");
+    for (Declaration d:getClassBodyList()) {
+      d.pp(writer, indent + 1);
+    }
+  }
+  
+  public void MethodDeclaration.pp(java.io.Writer writer, int indent) throws java.io.IOException{
+  	for(int i = 0; i < indent; i++)
+  		writer.write("- ");
+    writer.write("MethodDeclaration: " + getName() + "\n");
+    for(int i = 0; i < indent+1; i++)
+  		writer.write("- ");
+  	writer.write("Parameters:\n");
+    for (Declaration d:getParametersList()) {
+      d.pp(writer, indent + 1);
+    }
+    for(int i = 0; i < indent+1; i++)
+  		writer.write("- ");
+  	writer.write("Method Body:\n");
+    for (Declaration d:getMethodBodyList()) {
+      d.pp(writer, indent + 1);
+    }
+  }
+  
+  public void FieldDeclaration.pp(java.io.Writer writer, int indent) throws java.io.IOException{
+  	for(int i = 0; i < indent; i++)
+  		writer.write("- ");
+    writer.write("FieldDeclaration: " + getName() + "\n");
+  }
+  
+  public void DeclarationHook.pp(java.io.Writer writer, int indent) throws java.io.IOException{
+  	for(int i = 0; i < indent; i++)
+  		writer.write("- ");
+    writer.write("DeclarationHook: " + getName() + "\n");
+  }
+  
+}

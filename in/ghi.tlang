@@ -1,0 +1,24 @@
+class ghi{
+	g;
+	h;
+	i;
+	
+	setG(gg;){
+		[[hook]]	
+	}
+	setH(hh;){
+		[[hook]]	
+	}
+	setI(ii;){
+		[[hook]]	
+	}
+	getG(){
+		[[hook]]	
+	}
+	getH(){
+		[[hook]]	
+	}
+	getI(){
+		[[hook]]	
+	}
+}

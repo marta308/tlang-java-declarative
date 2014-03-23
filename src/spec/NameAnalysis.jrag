@@ -1,0 +1,132 @@
+// Synthesized and inherited attributes. Parameterized attributes.
+// See section 3.6 in the paper.
+// Reference manual: http://jastadd.org/
+
+aspect NameAnalysis {
+	
+	  syn String Declaration.qname() = null;
+	  eq ClassDeclaration.qname() = 
+	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
+	  eq MethodDeclaration.qname() =
+	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
+	  eq FieldDeclaration.qname() =
+	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
+	  eq DeclarationHook.qname() =
+	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
+	  
+	  inh String Declaration.parentName();
+	  eq CompilationUnit.getClassDeclaration(int i).parentName() = null;
+	  eq ClassDeclaration.getClassBody(int i).parentName() =
+	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
+	  eq MethodDeclaration.getParameters(int i).parentName() = 
+	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
+	  eq MethodDeclaration.getMethodBody(int i).parentName() = 
+	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
+	
+	syn java.util.List<Declaration> Root.lookup(String declName){
+  		java.util.List<Declaration> match = new java.util.LinkedList<Declaration>();
+  		for(CompilationUnit cu : getCompilationUnitsList()){
+  			match.addAll(cu.lookup(declName));
+  		}
+  		return match;
+  	}	
+  
+  syn java.util.List<Declaration> CompilationUnit.lookup(String label) { 
+  	String [] parts = label.split("\\.");
+  	java.util.List<Declaration> resLocal = new java.util.LinkedList<Declaration>();
+  	java.util.List<Declaration> res = new java.util.LinkedList<Declaration>();
+  	for (Declaration d : getClassDeclarationList()){
+  		if(parts[0].equals("*"))
+  			resLocal.add(d);
+      	else if(parts[0].equals(d.qname())) 
+      		resLocal.add(d);
+    }
+    if(parts.length == 1)
+    	return resLocal;
+  	for (int i = 1; i < parts.length; i++){
+  		res = new java.util.LinkedList<Declaration>();
+  		for(Declaration d : resLocal)
+  			for(Declaration d1 : d.localLookup(parts[i]))  //just impl of addall
+  				res.add(d1);
+  		if(!res.isEmpty()){
+  			resLocal = new java.util.LinkedList<Declaration>();
+  			for(Declaration d : res)
+  				resLocal.add(d);
+  		}
+  		else break; 		
+  	}
+  	return res;
+  }
+  
+  syn java.util.List<Declaration> Declaration.localLookup(String label) = new java.util.LinkedList<Declaration>();
+  
+  eq ClassDeclaration.localLookup(String label) {
+  	java.util.List<Declaration> res = new java.util.LinkedList<Declaration>();
+  	for(Declaration d : getClassBodyList()){
+  		if(label.equals("*"))
+  			res.add(d);
+  	  	else if(label.equals(d.getName()))
+  	  		res.add(d);
+  	}
+  	return res;
+  }
+  
+   eq MethodDeclaration.localLookup(String label){
+   	java.util.List<Declaration> res = new java.util.LinkedList<Declaration>();
+  	for(Declaration d : getParametersList()){
+  		if(label.equals("*"))
+  			res.add(d);
+  	  	else if(label.equals(d.getName()))
+  	  		res.add(d);
+  	}
+  	for(Declaration d : getMethodBodyList()){
+  		if(label.equals("*"))
+  			res.add(d);
+  	  	else if(label.equals(d.getName()))
+  	  		res.add(d);
+  	}	
+  	return res;
+  }
+   
+   //wildcards-not-supported lookup
+   syn Declaration ASTNode.lookupNOWC(String label){
+	   if(this instanceof CompilationUnit)
+		   return ((CompilationUnit)this).lookupNOWC(label);
+	   else if(this instanceof ClassDeclaration)
+		   return ((ClassDeclaration)this).lookupNOWC(label);
+	   else if(this instanceof MethodDeclaration)
+		   return ((MethodDeclaration)this).lookupNOWC(label);
+	   else return null;
+   }
+   
+   syn Declaration CompilationUnit.lookupNOWC(String label){
+	   for (Declaration d : getClassDeclarationList()){
+		   if(label.equals(d.qname()))
+			   return d;
+	   }
+	   return null;
+   }
+   
+   syn Declaration ClassDeclaration.lookupNOWC(String label){
+	   for(Declaration d : getClassBodyList()){
+		   if(label.equals(d.qname()))
+			   return d;
+	   }
+	   return null;
+   }
+   
+   syn Declaration MethodDeclaration.lookupNOWC(String label){
+	   for(Declaration d : getParametersList()){
+		   if(label.equals(d.qname()))
+			   return d;
+	   }
+	   for(Declaration d : getMethodBodyList()){
+		   if(label.equals(d.qname()))
+			   return d;
+	   }
+	   return null;
+   }
+   
+      
+  
+}
