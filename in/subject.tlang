@@ -1,8 +1,19 @@
 class subject{
-	[[innerclasshook1]]
-	[[innerclasshook2]]
-	[[innerclasshook3]]
-	[[innerclasshook4]]
-	[[varhook1]]
+	
+	field1;
+	field2;
+	field3;
+	
+	method1(param1;){
+		local1;
+	}
+	method2(param2;){
+		local2;
+	}
+	method3(param3;){
+		local3;
+	}
+
+	[[classhk]]
 }
 

@@ -13,7 +13,7 @@ public class Main {
 		String indir = getFilename(args);
 		String outdir = args[1];
 
-		//mainOneLoop(indir);
+		mainOneLoop(indir);
 
 		final long start = new java.util.Date().getTime();
 
@@ -24,7 +24,7 @@ public class Main {
 		final long end = new java.util.Date().getTime();
 		System.out.println("\nExecution Time: " + (end - start) / 1 + "ms");
 
-		System.out.println("rewrites count: " + ASTNode.rewritesCount);
+		//System.out.println("rewrites count: " + ASTNode.rewritesCount);
 		Compiler.prettyPrint(compUnits, outdir);
 	}
 

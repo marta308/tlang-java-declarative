@@ -88,7 +88,7 @@ aspect NameAnalysis {
   	return res;
   }
    
-   //wildcards-not-supported lookup
+   //wildcards-not-supported-local lookup
    syn Declaration ASTNode.lookupNOWC(String label){
 	   if(this instanceof CompilationUnit)
 		   return ((CompilationUnit)this).lookupNOWC(label);

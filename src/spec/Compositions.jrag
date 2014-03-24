@@ -15,6 +15,13 @@ aspect Compositions{
 	eq MethodDeclaration.getMethodBody(int i).getCompositionProgram() = getCompositionProgram();
 	eq MethodDeclaration.getParameters(int i).getCompositionProgram() = getCompositionProgram();
 	
+	syn CompositionProgram List.getCompositionProgram(){
+		if(getParent() instanceof Declaration)
+			return ((Declaration)getParent()).getCompositionProgram();
+		else if(getParent() instanceof CompilationUnit)
+			return ((CompilationUnit)getParent()).getCompositionProgram();
+		else return null;
+	}
 
 	syn java.util.List<Declaration> Composer.getSource(){
 		if(getSourceName().equals(""))
@@ -98,13 +105,14 @@ aspect Compositions{
 		return -1;
 	}
 	
-	public static int ASTNode.rewritesCount = 0;
+	//public static int ASTNode.rewritesCount = 0;
 	
 	rewrite DeclarationHook {
 		when(//getCompositionProgram().nextComposition() != null &&
-				getCompositionProgram().nextComposition().getTarget().contains(this))
+				getCompositionProgram().nextComposition().getTarget().contains(this) &&
+				getCompositionProgram().getRoot().checkWellformedness())
 		to Declaration{
-			rewritesCount++;
+			//rewritesCount++;
 			Composer composer = LookUpComposer(this);
 			java.util.List<Declaration> sources = composer.getSource();
 			if(sources.size() != 1)
@@ -115,9 +123,10 @@ aspect Compositions{
 	}
 	
 	rewrite List{
-		when(isParentOfExComposerSource())
+		when(isParentOfExComposerSource() &&
+				getCompositionProgram().getRoot().checkWellformedness())
 		to List{
-			rewritesCount++;
+			//rewritesCount++;
 			int childIndex = indexOfChildToRemove();
 			if(childIndex == -1)
 				throw new CompositionException("Incorrect composition source fragment."); 
