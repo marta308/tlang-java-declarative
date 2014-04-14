@@ -23,6 +23,7 @@ aspect NameAnalysis {
 	  eq MethodDeclaration.getMethodBody(int i).parentName() = 
 	  	"" + ((parentName() != null)? parentName() + "." : "") + getName();
 	
+  
 	syn java.util.List<Declaration> Root.lookup(String declName){
   		java.util.List<Declaration> match = new java.util.LinkedList<Declaration>();
   		for(CompilationUnit cu : getCompilationUnitsList()){
@@ -31,62 +32,47 @@ aspect NameAnalysis {
   		return match;
   	}	
   
-  syn java.util.List<Declaration> CompilationUnit.lookup(String label) { 
-  	String [] parts = label.split("\\.");
-  	java.util.List<Declaration> resLocal = new java.util.LinkedList<Declaration>();
-  	java.util.List<Declaration> res = new java.util.LinkedList<Declaration>();
-  	for (Declaration d : getClassDeclarationList()){
-  		if(parts[0].equals("*"))
-  			resLocal.add(d);
-      	else if(parts[0].equals(d.qname())) 
-      		resLocal.add(d);
-    }
-    if(parts.length == 1)
-    	return resLocal;
-  	for (int i = 1; i < parts.length; i++){
-  		res = new java.util.LinkedList<Declaration>();
-  		for(Declaration d : resLocal)
-  			for(Declaration d1 : d.localLookup(parts[i]))  //just impl of addall
-  				res.add(d1);
-  		if(!res.isEmpty()){
-  			resLocal = new java.util.LinkedList<Declaration>();
-  			for(Declaration d : res)
-  				resLocal.add(d);
-  		}
-  		else break; 		
-  	}
-  	return res;
-  }
-  
-  syn java.util.List<Declaration> Declaration.localLookup(String label) = new java.util.LinkedList<Declaration>();
-  
-  eq ClassDeclaration.localLookup(String label) {
-  	java.util.List<Declaration> res = new java.util.LinkedList<Declaration>();
-  	for(Declaration d : getClassBodyList()){
-  		if(label.equals("*"))
-  			res.add(d);
-  	  	else if(label.equals(d.getName()))
-  	  		res.add(d);
-  	}
-  	return res;
-  }
-  
-   eq MethodDeclaration.localLookup(String label){
-   	java.util.List<Declaration> res = new java.util.LinkedList<Declaration>();
-  	for(Declaration d : getParametersList()){
-  		if(label.equals("*"))
-  			res.add(d);
-  	  	else if(label.equals(d.getName()))
-  	  		res.add(d);
-  	}
-  	for(Declaration d : getMethodBodyList()){
-  		if(label.equals("*"))
-  			res.add(d);
-  	  	else if(label.equals(d.getName()))
-  	  		res.add(d);
-  	}	
-  	return res;
-  }
+	syn java.util.List<Declaration> CompilationUnit.lookup(String label){
+		java.util.List<Declaration> match = new java.util.LinkedList<Declaration>();
+		for (Declaration d : getClassDeclarationList()){
+			match.addAll(d.lookup(label));
+		}
+		return match;
+	}
+	
+	syn java.util.List<Declaration> Declaration.lookup(String label) = new java.util.LinkedList<Declaration>();
+	
+	eq ClassDeclaration.lookup(String label){
+		java.util.List<Declaration> match = new java.util.LinkedList<Declaration>();
+		match.addAll(localLookup(label));
+		for(Declaration d : getClassBodyList()){
+			match.addAll(d.lookup(label));
+		}
+		return match;
+	}
+	
+	eq MethodDeclaration.lookup(String label){
+		java.util.List<Declaration> match = new java.util.LinkedList<Declaration>();
+		match.addAll(localLookup(label));
+		for(Declaration d : getParametersList()){
+			match.addAll(d.lookup(label));
+   		}
+   		for(Declaration d : getMethodBodyList()){
+   			match.addAll(d.lookup(label));
+   		}
+   		return match;
+	}
+	
+	eq FieldOrHookDeclaration.lookup(String label){
+		return this.localLookup(label);
+	}
+	
+	syn java.util.List<Declaration> Declaration.localLookup(String label){
+		java.util.List<Declaration> res = new java.util.LinkedList<Declaration>();
+		if(match(label, this.qname()))
+			res.add(this);
+		return res;
+	}	
    
    //wildcards-not-supported-local lookup
    syn Declaration ASTNode.lookupNOWC(String label){
@@ -101,7 +87,7 @@ aspect NameAnalysis {
    
    syn Declaration CompilationUnit.lookupNOWC(String label){
 	   for (Declaration d : getClassDeclarationList()){
-		   if(label.equals(d.qname()))
+		   if(label.equals(d.getName()))
 			   return d;
 	   }
 	   return null;
@@ -109,7 +95,7 @@ aspect NameAnalysis {
    
    syn Declaration ClassDeclaration.lookupNOWC(String label){
 	   for(Declaration d : getClassBodyList()){
-		   if(label.equals(d.qname()))
+		   if(label.equals(d.getName()))
 			   return d;
 	   }
 	   return null;
@@ -117,16 +103,67 @@ aspect NameAnalysis {
    
    syn Declaration MethodDeclaration.lookupNOWC(String label){
 	   for(Declaration d : getParametersList()){
-		   if(label.equals(d.qname()))
+		   if(label.equals(d.getName()))
 			   return d;
 	   }
 	   for(Declaration d : getMethodBodyList()){
-		   if(label.equals(d.qname()))
+		   if(label.equals(d.getName()))
 			   return d;
 	   }
 	   return null;
    }
    
+ //label1 - searched name, label2 - declarations' qname
+   public static boolean Declaration.match(String label1, String label2){
+	   if(!label1.contains("*"))
+		   return label1.equals(label2);
+	   
+	   String [] parts1 = label1.split("\\.");
+	   String [] parts2 = label2.split("\\.");
+	   int index1 = 0;
+	   int index2 = 0;
+	   for(;index1 < parts1.length && index2 < parts2.length; index1++){
+		   if (!parts1[index1].contains("*")){		//part without wildcards
+			   if(parts1[index1].equals(parts2[index2]))
+				   index2++;
+			   else return false;
+		   }
+		   else if(parts1[index1].equals("*"))		//simple wildcard  - (*)
+			   index2++;
+		   else if(parts1[index1].matches("\\*[0-9]+")){		//[0, n] wildcard - (*n)
+			   int limit = Integer.parseInt(parts1[index1].substring(1));
+			   if(index1 != parts1.length - 1){
+				   String nextPart = parts1[index1+1];
+				   int j = 0;
+				   for(; j <= limit && !nextPart.equals(parts2[index2]); j++){
+					   index2++;
+					   if(index2 >= parts2.length)
+						   return false;
+				   }
+				   if(j > limit)
+					   return false;
+			   }
+			   else 
+				   return index1 + limit >= parts2.length;
+		   }
+		   else if(parts1[index1].equals("**")){				//[0, inf) wildcard - (**)
+			   if(index1 != parts1.length - 1){
+				   String nextPart = parts1[index1+1];
+				   while(!nextPart.equals(parts2[index2])){
+					   index2++;
+					   if(index2 >= parts2.length)
+						   return false;
+				   }
+			   }
+			   else return true;
+		   }		   
+	   }
+	   if(index1 == parts1.length && index2 == parts2.length ||
+			   index1 + 1 == parts1.length && 
+			   (parts1[index1].equals("**") || parts1[index1].matches("\\*[0-9]+")))
+		   return true;
+	   else return false;
+   }
       
   
 }

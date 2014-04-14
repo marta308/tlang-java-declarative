@@ -105,14 +105,13 @@ aspect Compositions{
 		return -1;
 	}
 	
-	//public static int ASTNode.rewritesCount = 0;
 	
 	rewrite DeclarationHook {
 		when(//getCompositionProgram().nextComposition() != null &&
-				getCompositionProgram().nextComposition().getTarget().contains(this) &&
-				getCompositionProgram().getRoot().checkWellformedness())
+				getCompositionProgram().nextComposition().getTarget().contains(this)
+				&& getCompositionProgram().getRoot().checkWellformedness()
+				)
 		to Declaration{
-			//rewritesCount++;
 			Composer composer = LookUpComposer(this);
 			java.util.List<Declaration> sources = composer.getSource();
 			if(sources.size() != 1)
@@ -123,15 +122,29 @@ aspect Compositions{
 	}
 	
 	rewrite List{
-		when(isParentOfExComposerSource() &&
-				getCompositionProgram().getRoot().checkWellformedness())
+		when(isParentOfExComposerSource()
+				&& getCompositionProgram().getRoot().checkWellformedness()
+				)
 		to List{
-			//rewritesCount++;
 			int childIndex = indexOfChildToRemove();
 			if(childIndex == -1)
 				throw new CompositionException("Incorrect composition source fragment."); 
 			removeChild(childIndex);
 			return this;
+		}
+	}
+	
+	public void Root.traverse(){
+		for(CompilationUnit cu : getCompilationUnitsList()){
+			cu.traverse();
+		}
+	}
+	public void ASTNode.traverse() {
+		for(int i=0;i<this.getNumChildNoTransform();i++){
+			//getChild(i) triggers the rewrite in JastAdd
+			ASTNode next = this.getChild(i);
+				if(next!=null)
+				next.traverse();
 		}
 	}
  

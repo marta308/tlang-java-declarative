@@ -56,7 +56,7 @@ aspect WellFormedness {
 	
 	
 	syn boolean Declaration.isCorrectLocal(){
-		return (this == getParent().getParent().lookupNOWC(qname()));
+		return (this == getParent().getParent().lookupNOWC(getName()));
 	}
 	
 	public boolean Root.checkWellformedness() throws CompositionException{

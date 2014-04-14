@@ -2,7 +2,7 @@
 
 #START=$(date +%s%N)
 
-java -cp ./tlang-declarative.jar exampleprogs.Main in out
+java -cp ./tlang-declarative-nowf.jar exampleprogs.Main in/recipes/02-rewrites.txt in
 
 #END=$(date +%s%N)
 #DIFF=$((( $END - $START ) / 1000000))

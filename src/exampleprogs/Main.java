@@ -10,36 +10,37 @@ public class Main {
 	private static List<CompilationUnit> compUnits = null;
 
 	public static void main(String[] args) {
-		String indir = getFilename(args);
-		String outdir = args[1];
+		String recipe = getFilename(args);
+		String indir = args[1];
+		String outdir = "out/decl";
 
-		mainOneLoop(indir);
+		mainOneLoop(recipe, indir);
 
 		final long start = new java.util.Date().getTime();
 
-		for (int i = 0; i < 1; i++) {
-			mainOneLoop(indir);
+		for (int i = 0; i < 10; i++) {
+			mainOneLoop(recipe, indir);
 		}
 
 		final long end = new java.util.Date().getTime();
-		System.out.println("\nExecution Time: " + (end - start) / 1 + "ms");
+		System.out.println("\nExecution Time: " + (end - start) / 10 + "ms");
 
-		//System.out.println("rewrites count: " + ASTNode.rewritesCount);
 		Compiler.prettyPrint(compUnits, outdir);
 	}
 
-	private static void mainOneLoop(String indir) {
-
+	private static void mainOneLoop(String recipe, String indir) {
+		
 		compUnits = Compiler.compile(indir);
 
 		CompositionProgram cp = CompositionLangCompiler
-				.compile("in/composition.txt");
+				.compile(recipe);
 		assert (cp != null);
 
 		Root root = new Root(compUnits, cp);
 
 		try {
 			root.checkWellformedness();
+			//root.traverse();
 		} catch (CompositionException e) {
 			System.out.println(e.getMessage());
 		}
@@ -49,7 +50,7 @@ public class Main {
 	public static String getFilename(String[] args) {
 		if (args.length != 2) {
 			System.out
-					.println("Usage: java Compiler: infile, outfile");
+					.println("Usage: composition recipe file, infolder");
 			System.exit(1);
 		}
 		return args[0];
